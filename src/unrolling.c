@@ -10,12 +10,17 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
+// Función para limpiar la caché
+void clearCache();
+
 int main(int argc , char *argv[]) {
     
     if(argc < 2){
         printf("ERROR: wrong number of arguments | Usage: %s <array size> <no. of iterations>\n", argv[0]);
         exit(1);
     }
+
+    clearCache();
 
     struct timeval start, end;
 
@@ -65,5 +70,20 @@ int main(int argc , char *argv[]) {
     seconds = (end.tv_sec - start.tv_sec);
     micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
 
-    printf("Bucle sin desenrrollar: %ld segundos y %ld microsegundos\n", seconds, micros);
+    printf("Bucle desenrrollado: %ld segundos y %ld microsegundos\n", seconds, micros);
+}
+
+void clearCache() {
+
+    // Tamaño de la caché L1 de datos (L1d) en bytes
+    int cacheSize = 64 * 1024;
+    int numInts = cacheSize / sizeof(int); 
+    int* dummy = malloc(numInts * sizeof(int));
+
+    // Escribir en la memoria para asegurar que se carga en la caché L1 de datos
+    for (int i = 0; i < numInts; i++) {
+        dummy[i] = i;
+    }
+
+    free(dummy);
 }

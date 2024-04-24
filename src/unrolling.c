@@ -20,7 +20,8 @@ int main(int argc , char *argv[]) {
         exit(1);
     }
 
-    clearCache();
+    // Es necesario introducir la limpieza de la caché (y asi eliminar residuos) para obtener resultados más precisos
+    clearCache(); 
 
     struct timeval start, end;
 
@@ -44,11 +45,13 @@ int main(int argc , char *argv[]) {
 
     gettimeofday(&end, NULL);
 
-    long seconds = (end.tv_sec - start.tv_sec);
-    long micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
+    double tiempo = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
 
-    printf("Bucle sin desenrrollar: %ld segundos y %ld microsegundos\n", seconds, micros);
+    printf("Bucle sin desenrrollar: %lf\n",tiempo);
 
+
+    //Para asegurarnos que las mediciones no esten afectadas por la carga anterior, limpiamos la cache
+    clearCache();
 
     gettimeofday(&start, NULL);
 
@@ -67,10 +70,9 @@ int main(int argc , char *argv[]) {
 
     gettimeofday(&end, NULL);
 
-    seconds = (end.tv_sec - start.tv_sec);
-    micros = ((seconds * 1000000) + end.tv_usec) - (start.tv_usec);
+    tiempo = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
 
-    printf("Bucle desenrrollado: %ld segundos y %ld microsegundos\n", seconds, micros);
+    printf("Bucle desenrrollado: %lf\n",tiempo);
 }
 
 void clearCache() {

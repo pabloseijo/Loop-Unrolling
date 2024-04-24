@@ -18,3 +18,36 @@ La información también indica los tamaños de caché general para varios nivel
 Cache L1 de instrucciones: 131,072 bytes (128 KB)
 Cache L1 de datos: 65,536 bytes (64 KB)
 Cache L2: 4,194,304 bytes (4 MB)
+
+
+1. Gráfico de Tiempos de Ejecución
+Eje X: Número de iteraciones del bucle.
+Eje Y: Tiempo de ejecución en segundos.
+Descripción: Puedes variar el número de iteraciones o el tamaño del arreglo mientras mides los tiempos de ejecución del bucle normal y del bucle desenrollado. Esto te permitirá visualizar cómo afecta el desenrollado de bucles al rendimiento en diferentes cargas de trabajo.
+2. Gráfico Comparativo por Tamaño del Array
+Eje X: Tamaño del array.
+Eje Y: Tiempo de ejecución en segundos.
+Descripción: Alterna el tamaño del array (N) manteniendo el número de iteraciones constante. Este gráfico te permitirá observar cómo la eficiencia del desenrollado de bucles puede variar con diferentes tamaños de datos.
+3. Histograma de Mejora de Rendimiento
+Eje X: Tamaño del array o número de iteraciones.
+Eje Y: Porcentaje de mejora en el tiempo de ejecución.
+Descripción: Calcula el porcentaje de mejora en el tiempo usando la fórmula 
+(
+tiempo sin desenrollar
+−
+tiempo con desenrollar
+)
+/
+tiempo sin desenrollar
+×
+100
+%
+(tiempo sin desenrollar−tiempo con desenrollar)/tiempo sin desenrollar×100%. Este gráfico muestra directamente el beneficio del desenrollado de bucles.
+4. Gráfico de Tiempo Real versus Tiempo de CPU
+Eje X: Número de iteraciones o tamaño del array.
+Eje Y: Tiempo real versus tiempo de CPU.
+Descripción: Compara el tiempo real (wall-clock time) y el tiempo de CPU para ambos métodos de ejecución del bucle. Este análisis puede ser relevante si el desenrollado del bucle afecta de manera diferente estos dos tipos de tiempo debido a la utilización del procesador y la gestión del sistema operativo.
+5. Gráfico de Dispersión de Eficiencia de Caché
+Eje X: Número de iteraciones o tamaño del array.
+Eje Y: Tiempo de ejecución.
+Descripción: Utiliza datos del uso de la caché o misses de caché (si disponibles mediante herramientas de perfilado como Valgrind o hardware counters) y compáralos con el tiempo de ejecución. Este gráfico puede ayudar a visualizar la relación entre la eficiencia de la caché y el rendimiento del bucle.

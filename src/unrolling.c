@@ -18,6 +18,13 @@ int main(int argc , char *argv[]) {
     if(argc < 2){
         printf("ERROR: wrong number of arguments | Usage: %s <array size> <no. of iterations>\n", argv[0]);
         exit(1);
+    } 
+
+    FILE *f;
+
+    if((f = fopen("unrolling.txt", "a"))== NULL){
+        printf("ERROR: file opening failed\n");
+        exit(1);
     }
 
     // Es necesario introducir la limpieza de la caché (y asi eliminar residuos) para obtener resultados más precisos
@@ -49,6 +56,8 @@ int main(int argc , char *argv[]) {
 
     printf("Bucle sin desenrrollar: %lf\n",tiempo);
 
+    fprintf(f, "%d %lf\n", ITER, tiempo);
+
 
     //Para asegurarnos que las mediciones no esten afectadas por la carga anterior, limpiamos la cache
     clearCache();
@@ -73,6 +82,10 @@ int main(int argc , char *argv[]) {
     tiempo = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
 
     printf("Bucle desenrrollado: %lf\n",tiempo);
+    fprintf(f, "%d %lf ", ITER, tiempo);
+
+    fprintf(f, "\n\n");
+    fclose(f);
 }
 
 void clearCache() {

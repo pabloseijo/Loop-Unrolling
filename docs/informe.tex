@@ -39,6 +39,28 @@
 
 \usepackage{hyperref} % For hyperlinks in the PDF
 
+\usepackage{listings}
+\usepackage{xcolor}
+
+% Configuración de los listings para mostrar código
+\lstset{
+    language=C,                % Lenguaje de programación
+    basicstyle=\small\ttfamily, % Estilo básico y tamaño de fuente
+    keywordstyle=\color{blue}, % Estilo de las palabras clave
+    stringstyle=\color{red},   % Estilo de las cadenas de texto
+    commentstyle=\color{purple},% Estilo de los comentarios
+    morecomment=[l][\color{magenta}]{\#},  % Estilo de los preprocesadores
+    breaklines=true,           % Permite que las líneas se partan
+    breakatwhitespace=true,    % Los cortes de línea ocurren en los espacios en blanco
+    tabsize=4,                 % Tamaño de tabulación
+    showstringspaces=false,    % No muestra espacios especiales en las cadenas
+    frame=single,              % Añade un marco alrededor del código
+    numbers=left,              % Números de línea a la izquierda
+    numberstyle=\small,        % Tamaño de fuente de los números de línea
+    captionpos=b,              % Posición del título en la parte inferior
+    escapeinside={(*@}{@*)}    % Permite añadir LaTeX dentro del código
+}
+
 %----------------------------------------------------------------------------------------
 %	TITLE SECTION
 %----------------------------------------------------------------------------------------
@@ -54,7 +76,7 @@
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
 		\noindent En este informe, se abordará el tema del desenrolle de lazos para la optimización de operaciones de reducción, tal que se verá en que consiste la técnica y se comentarán experimentos.  \\\mbox{}\\
-		 \textbf{\textit{Palabras clave}: bucles, desenrollamiento, optimización\ldots}
+		 \textbf{\textit{Palabras clave}: bucles, lazos, desenrollamiento, optimización\ldots}
 	\end{abstract}
 }
 
@@ -86,7 +108,112 @@
 	
 %-------------------------------------------
 
-\section{Descripción de la técnica analizada}
+\section{Descripción de la técnica analizada: Loop Unrolling}
+
+El desenrollamiento de lazos (loop unrollig en inglés), es una técnica que consiste en intentar minimizar el coste temporal de un bucle o lazo, mediante la reducción del número de iteraciones del mismo. 
+
+Básicamente lo que hacemos en esta es la de eliminar o reducir las iteraciones necesarias para realizar una operación, reduciendo así el tiempo de ejecución de la misma. 
+
+Un sencillo ejemplo es el siguiente:
+
+\begin{lstlisting}[caption={Bucle sin desenrollar},label={lst:codigoC}]
+	// This program does not uses loop unrolling. 
+	#include<stdio.h> 
+	
+	int main(void) 
+	{ 
+		for (int i=0; i<5; i++) 
+			printf("Hello\n"); //print hello 5 times 
+	
+		return 0; 
+	}
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Bucle aplicando la técnica},label={lst:codigoC}]
+	// This program uses loop unrolling. 
+	#include<stdio.h> 
+	
+	int main(void) 
+	{ 
+		// unrolled the for loop in program 1 
+		printf("Hello\n"); 
+		printf("Hello\n"); 
+		printf("Hello\n"); 
+		printf("Hello\n"); 
+		printf("Hello\n"); 
+	
+		return 0; 
+	} 
+\end{lstlisting}
+
+Ambos programas [1] nos muestran un sencillo ejemplo de la aplicación de esta técnica, pudiendo observar en el segundo caso se ha eliminado por completo el bucle, reduciendo así el tiempo de ejecución del programa, debido a que dentro del bucle es necesario hacer una comprobación del índice, lo que ralentiza el código. 
+
+Otra manera diferente, para lazos donde eliminar el bucle por completo no es posible, se pueden reducir el número de iteraciones realizando varias operaciones en una sola iteración. 
+
+Por ejemplo: imaginemos que tenemos un bucle el cual almacena en una variable el sumatorio de los números del 1 al 10. En un bucle sin desenrollamiento tendríamos que realizar 10 iteraciones, donde en cada una realizamos una operación. Sin embargo, podemos reducir el número de iteraciones a la mitad si en vez de sumar de uno en uno, sumamos de dos en dos, y a su vez podríamos reducirlo a 2 iteraciones si sumamos de 5 en 5. Esto es la otra manera (y que a su vez veremos posteriormente en los experimentos) de aplicar la técnica de desenrollamiento de lazos.
+
+\section{Beneficios y desventajas}
+
+Como casi cualquier herramienta que podamos utilizar, esta técnica conlleva una serie de ventajas y desventajas. Algunas de las ventajas que podemos encontrar son:
+
+\textbf{Ventajas:}
+\begin{enumerate}
+	\item \textbf{Reducción de la Sobrecarga de Ciclos de Bucle:} En cualquier sistema, reducir la frecuencia con la que se evalúan las condiciones del bucle y se actualizan las variables de control puede mejorar el rendimiento al disminuir la sobrecarga general del bucle.
+	\item \textbf{Incremento en el Paralelismo:} En sistemas con capacidades de procesamiento paralelo, desenrollar bucles puede permitir que múltiples operaciones se ejecuten al mismo tiempo, mejorando el uso del paralelismo inherente al hardware.
+	\item \textbf{Mejor Uso de las Unidades de Procesamiento:} Al desenrollar un bucle, se pueden realizar más cálculos por cada entrada al bucle, lo cual puede ser eficiente en términos de aprovechamiento del tiempo de CPU y la ejecución en pipelining.
+    \item \textbf{Reducción en el Tiempo de Ciclo de Reloj:} A medida que se desenrollan los bucles y el área utilizada se reduce inicialmente, puede resultar en un decremento en el tiempo de ciclo de reloj, lo cual potencialmente incrementa la frecuencia de operación y por ende la velocidad de procesamiento.
+    \item \textbf{Disminución en el Uso del Área de FPGA (Field Programmable Gate Array) en Ciertos Casos:} Inicialmente, el desenrollamiento puede llevar a una reducción en el área utilizada, lo que es beneficioso cuando el área es una limitante crítica en el diseño del sistema.
+\end{enumerate}
+
+\textbf{Desventajas:}
+\begin{enumerate}
+	\item \textbf{Aumento del Tamaño del Código:} Desenrollar bucles aumenta la cantidad de código que se ejecuta, lo cual puede llevar a un mayor uso de la memoria de instrucciones y potencialmente a un caché de instrucciones más ocupado.
+	\item \textbf{Complicaciones en la Gestión de la Memoria:} El aumento en la cantidad de operaciones ejecutadas simultáneamente puede hacer que la gestión de memoria sea más compleja y puede presionar al ancho de banda de memoria disponible.
+	\item \textbf{Limitaciones por Dependencias de Datos:} Si existen dependencias de datos dentro de las iteraciones de un bucle, el desenrollamiento puede no ser aplicable sin modificar significativamente el algoritmo o puede llevar a la ejecución ineficiente debido a la espera de datos.
+	\item \textbf{Inflexibilidad en la Modificación del Código:} El código desenrollado es menos flexible para modificaciones futuras o ajustes de parámetros del bucle, ya que cualquier cambio requiere más esfuerzo para actualizar todas las instancias desenrolladas del bucle.
+\end{enumerate}
+
+Por tanto, viendo las ventajas y las desventajas, el programador deberá valorar si aplicar esta técnica en su código, ya que aunque puede mejorar el rendimiento, también puede conllevar una serie de problemas.
+
+\section{Experimentos}
+
+Para los experimentos, se ha realizado un programa en C que mide los dos siguiente bucles:
+
+\begin{lstlisting}[caption={Bucle sin desenrollar},label={lst:codigoC}]
+	for(k=0; k<ITER; k++){
+        a=0.0;
+        for(i=0; i<N; i++){
+            a = a + x[i] * y[i];
+        }
+    }
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Bucle aplicando la técnica},label={lst:codigoC}]
+	for(k=0; k<ITER; k++){
+        a = a1 = a2 = a3 = 0.0;
+
+        for(i=0; i<N; i+=4){
+            a = a + x[i] * y[i];
+            a1 = a1 + x[i+1] * y[i+1];
+            a2 = a2 + x[i+2] * y[i+2];
+            a3 = a3 + x[i+3] * y[i+3];
+        }   
+
+        a = a + a1 + a2 + a3;
+    } 
+\end{lstlisting}
+
+En el primer bucle [3], se realiza la operación de producto escalar de dos vectores de tamaño N, y se repite ITER veces. En el segundo bucle [4], se ha desenrollado el bucle interno, realizando 4 operaciones en cada iteración.
+
+Por tanto sobre estos dos lazos realizarán experimentos modificando el valor de N y de ITER, para ver como afecta el desenrollamiento de lazos en el tiempo de ejecución del programa.
+
+Un detalle a destacar sobre la implementación del código, es la necesidad de limpiar la caché antes de realizar las mediciones, ya que si no se hace, puede afectar a la precisión de los datos medidos. Para ello, se ha implementado la función \textit{clearCache()} la cual, sirviéndose del tamaño de la caché L1d, crea un array de este tamaño para posteriormente rellenarlo entero y posteriormente liberándolo. Debido al tamaño del programa no es necesario limpiar la caché L2, ya que el tamaño de la anterior es de 64KB, y no llega a sobrepasar este tamaño.
+
+\subsection{Tiempos de ejecución}
+
+Para el primer experimento vamos a realizar una serie de mediciones variando el tamaño de ITER, con un tamaño de array fijo, y veremos como afecta al tiempo de ejecución del programa.
+
+Para analizarlo correctamente nos serviremos de la siguiente gráfica:
 
 
 
@@ -101,14 +228,27 @@
 %----------------------------------------------------------------------------------------
 	
 \begin{thebibliography}{99} % Bibliografía - alternativamente, se recomienda el uso de bibtex o biblatex
-		
-	\bibitem[1]{Sistemas Operativos Modernos}
-    Andrew S. Tanenbaum. 
-	\newblock {\em Sistemas Operativos Modernos, 3ª edición.}
-	\newblock Editorial Prentice-Hall, 2009, secciones 2.3.4 - 2.3.5.
-%	\newblock \href{https://apps4two.com/curso_dba/bibliografia/2-Sistemas%20operativos%20moderno%203ed%20Tanenbaum.pdf}{https://apps4two.com/curso_dba/bibliografia/2Sistemasoperativosmoderno203ed20Tanenbaum.pdf}, 	\newblock [online]
-		
+
+    \bibitem[1]{LoopUnrollingGeeksforGeeks}
+    GeeksforGeeks.
+    \newblock {\em Loop Unrolling}.
+    \newblock \url{https://www.geeksforgeeks.org/loop-unrolling/}, \newblock [online]
+    
+    \bibitem[2]{Dragomir2009}
+    O. S. Dragomir, T. Stefanov, and K. Bertels.
+    \newblock Optimal Loop Unrolling and Shifting for Reconfigurable Architectures.
+    \newblock {\em ACM Transactions on Reconfigurable Technology and Systems}, Vol. 2, No. 4, Article 25, September 2009, 24 pages.
+    \newblock DOI = 10.1145/1575779.1575785.
+    \newblock \url{http://doi.acm.org/10.1145/1575779.1575785}, \newblock [online]
+
+    \bibitem[3]{Buyukkurt2004}
+    Betul Buyukkurt, Zhi Guo, and Walid A. Najjar.
+    \newblock {\em Impact of Loop Unrolling on Area, Throughput and Clock Frequency in ROCCC: C to VHDL Compiler for FPGAs}.
+    \newblock Department of Computer Science and Engineering, University of California - Riverside, Riverside, CA 92507, USA.
+    
 \end{thebibliography}
+
+
 	
 	%----------------------------------------------------------------------------------------
 	

@@ -32,17 +32,9 @@ Descripción: Alterna el tamaño del array (N) manteniendo el número de iteraci
 Eje X: Tamaño del array o número de iteraciones.
 Eje Y: Porcentaje de mejora en el tiempo de ejecución.
 Descripción: Calcula el porcentaje de mejora en el tiempo usando la fórmula 
-(
-tiempo sin desenrollar
-−
-tiempo con desenrollar
-)
-/
-tiempo sin desenrollar
-×
-100
-%
-(tiempo sin desenrollar−tiempo con desenrollar)/tiempo sin desenrollar×100%. Este gráfico muestra directamente el beneficio del desenrollado de bucles.
+(tiempo sin desenrollar − tiempo con desenrollar)/tiempo sin desenrollar ×100 % (tiempo sin desenrollar−tiempo con desenrollar)/tiempo sin desenrollar×100%. 
+
+Este gráfico muestra directamente el beneficio del desenrollado de bucles.
 4. Gráfico de Tiempo Real versus Tiempo de CPU
 Eje X: Número de iteraciones o tamaño del array.
 Eje Y: Tiempo real versus tiempo de CPU.

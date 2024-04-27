@@ -42,6 +42,10 @@
 \usepackage{listings}
 \usepackage{xcolor}
 
+\usepackage{float}
+
+\usepackage{amsmath}
+
 % Configuración de los listings para mostrar código
 \lstset{
     language=C,                % Lenguaje de programación
@@ -214,6 +218,102 @@ Un detalle a destacar sobre la implementación del código, es la necesidad de l
 Para el primer experimento vamos a realizar una serie de mediciones variando el tamaño de ITER, con un tamaño de array fijo, y veremos como afecta al tiempo de ejecución del programa.
 
 Para analizarlo correctamente nos serviremos de la siguiente gráfica:
+
+\begin{figure}[H]
+    \centering
+    \hspace{1cm}
+    \includegraphics[width=\columnwidth]{img/exeTimes.jpg}
+    \caption{Gráfica de tiempo de ejecución en función de ITER}
+    \label{fig:iter}
+\end{figure}
+
+La gráfica nos muestra dos curvas, azul para el bucle normal y naranja para el bucle desenrollado. Como se puede fácilmente observar obtenemo slas siguientes conclusiones:
+
+\begin{itemize}
+    \item \textbf{Mejora del rendimiento con el desenrollamiento:} El bucle desenrollado muestra consistentemente tiempos de ejecución inferiores en comparación con el bucle normal a lo largo de todo el rango de iteraciones. Esto indica que el desenrollamiento de bucles puede ser una técnica efectiva para optimizar el rendimiento de los programas en términos de tiempo de ejecución.
+    \item \textbf{Escalabilidad:} A medida que aumenta el número de iteraciones, el impacto del desenrollamiento de bucles en la mejora del rendimiento parece ser más pronunciado. La curva del bucle normal muestra un crecimiento más rápido que la del bucle desenrollado, lo que sugiere que la técnica de desenrollamiento se vuelve más ventajosa a gran escala.
+    \item \textbf{Crecimiento lineal:} Ambas curvas parecen seguir un patrón de crecimiento lineal, lo cual es esperable ya que el tiempo de ejecución debería aumentar proporcionalmente con el número de iteraciones. No obstante, la pendiente de la curva del bucle desenrollado es claramente menos inclinada, lo que sugiere una menor adición de tiempo por cada iteración adicional en comparación con el bucle normal.
+\end{itemize}
+
+Sin embargo, y a pesar de las mejoras descritas, hay que tener en cuenta que con números bajos de iteraciones, ambos bucles no distan tanto en tiempo de ejecución, por lo que habría que estudiar si en estos casos sería beneficioso aplicar la técnica.
+
+\subsection{Por tamaño de array}
+
+En este segundo experimento a realizar, haremos lo contrario al anterior, es decir, mantendremos un tamaño fijo de iteraciones (5000) y variaremos el tamaño del array.
+
+Esto nos permitirá ver como el unrolling afecta a diferentes tamaños de datos, y si verdaderamente es eficaz, frente a un bucle normal sin desenrollar.
+
+Como en el anteriro experimento nos serviremos de la siguiente gráfica, donde el eje X es el tamaño del array (N) y el eje Y el tiempo de ejecución:
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\columnwidth]{img/arrayTam.jpg}
+    \caption{Gráfica de tiempo de ejecución en función de N}
+    \label{fig:iter}
+\end{figure}
+
+Al igual que en el experimento anterior, podemos sacar unas conclusiones similares:
+
+\begin{itemize}
+    \item El tiempo de ejecución para el bucle normal aumenta linealmente con el tamaño del array, lo que indica una relación directa entre el tamaño del array y el tiempo de cómputo requerido.
+    \item El bucle desenrollado demuestra una eficiencia notablemente mayor. Aunque el tiempo de ejecución también crece con el tamaño del array, lo hace a una tasa menor que el bucle normal.
+    \item La diferencia de tiempo entre los dos enfoques se amplía con el aumento del tamaño del array. Esto sugiere que para arrays grandes, el desenrollamiento de bucles puede ser especialmente beneficioso.
+    \item La técnica de desenrollamiento de bucles se confirma como una optimización efectiva para la reducción de la sobrecarga de los bucles y el aprovechamiento del paralelismo del hardware, lo cual es crítico en aplicaciones de procesamiento de datos de gran volumen.
+\end{itemize}
+
+Estos resultados son muy similares a los obtenidos en el experimento anterior, lo que nos lleva a pensar que la técnica de desenrollamiento de lazos es efectiva en la reducción de tiempos de ejecución en bucles de gran tamaño.
+
+\subsection{Mejora de Rendimiento}
+
+En este apartado vamos a calcular el porcentaje de mejora de rendimiento de una técnica respecto a la otra aplicando la siguiente fórmula:
+
+\begin{equation}
+    \text{Mejora de Rendimiento (\%)} = \left( \frac{ts - td}{ts} \right) \times 100\%
+\end{equation}
+
+Donde \( ts \) representa el tiempo sin desenrollar y \( td \) el tiempo con desenrollado. 
+
+Para representar esto nos serviremos del siguiente historiograma:   
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\columnwidth]{img/improvement.png}
+    \caption{Histograma de la mejora de rendimiento al aplicar la técnica de desenrollamiento de bucles.}
+    \label{fig:histograma_mejora_rendimiento}
+\end{figure}
+
+
+A partir del histograma, se pueden extraer varias conclusiones:
+
+\begin{itemize}
+    \item La mejora de rendimiento tras aplicar el desenrollamiento de bucles es consistentemente positiva, lo que indica que esta técnica ofrece beneficios en todos los casos probados.
+    \item La mejora porcentual parece ser más significativa en tamaños de array más pequeños. Esto puede deberse a que el desenrollamiento reduce la sobrecarga del control del bucle, que es más notable cuando la carga de trabajo del bucle es menor.
+    \item A medida que el tamaño del array aumenta, la mejora porcentual se reduce. Sin embargo, incluso para los tamaños de array más grandes, la técnica aún proporciona un beneficio notable.
+\end{itemize}
+
+Es importante considerar que el desenrollamiento de bucles puede introducir complejidad adicional en el código y podría aumentar el tamaño del binario final. Por lo tanto, la decisión de aplicar esta técnica debe balancear la mejora de rendimiento contra estos posibles inconvenientes.
+
+\subsection{Tiempo Real vs Tiempo de CPU}
+
+En este cuarto experimento, comparamos el tiempo de CPU con el tiempo real para ambas técnicas de ejecución del bucle, con el fin de observar diferencias entre estos y determinar si el desenrollamiento de lazos afecta de manera distinta a estos dos tipos de medición de tiempo.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\columnwidth]{img/times.png}
+    \caption{Comparación del tiempo real versus el tiempo de CPU para bucles normal y desenrollado.}
+    \label{fig:real_vs_cpu_time}
+\end{figure}
+
+A partir de la gráfica obtenemos varias conclusiones:
+
+\begin{itemize}
+    \item Se observa que el tiempo de CPU y el tiempo real para el bucle normal son muy similares a lo largo de todas las iteraciones, lo que indica una correlación directa entre ellos y sugiere una eficiencia constante en la ejecución.
+    \item Para el bucle desenrollado, tanto el tiempo real como el de CPU son consistentemente menores en comparación con el bucle normal, reafirmando la efectividad del desenrollamiento en la reducción del tiempo total de ejecución.
+\end{itemize}
+
+Estas observaciones resaltan la importancia de considerar tanto el tiempo de CPU como el tiempo real al evaluar optimizaciones de código, ya que proporcionan una visión más completa del rendimiento y la eficiencia del programa, y podemos concluir que dado que ambos tiempos para cada técnica son muy similares, las las mejoras son similares a las obtenidas en los experimentos anteriores.
+
 
 
 

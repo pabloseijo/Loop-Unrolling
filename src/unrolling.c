@@ -22,7 +22,7 @@ int main(int argc , char *argv[]) {
 
     FILE *f;
 
-    if((f = fopen("unrolling.txt", "a"))== NULL){
+    if((f = fopen("times.csv", "a"))== NULL){
         printf("ERROR: file opening failed\n");
         exit(1);
     }
@@ -31,6 +31,7 @@ int main(int argc , char *argv[]) {
     clearCache(); 
 
     struct timeval start, end;
+    clock_t start_cpu, end_cpu; // Variables para medir el tiempo de CPU
 
     int N = atoi(argv[1]);
     int ITER = atoi(argv[2]);
@@ -41,6 +42,7 @@ int main(int argc , char *argv[]) {
 
     //----- Fragmentos de codigo a medir -----//
 
+    start_cpu = clock();
     gettimeofday(&start, NULL);
 
     for(k=0; k<ITER; k++){
@@ -51,17 +53,17 @@ int main(int argc , char *argv[]) {
     }
 
     gettimeofday(&end, NULL);
+    end_cpu = clock();
 
-    double tiempo = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
+    double tiempoSinDesenrollar = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
+    double tiempoSinDesenrrollarCpu = ((double) (end_cpu - start_cpu)) / CLOCKS_PER_SEC;
 
-    printf("Bucle sin desenrrollar: %lf\n",tiempo);
-
-    fprintf(f, "%d %lf\n", ITER, tiempo);
-
+     printf("Bucle normal - Tiempo real: %lf, Tiempo CPU: %lf\n", tiempoSinDesenrollar, tiempoSinDesenrrollarCpu);
 
     //Para asegurarnos que las mediciones no esten afectadas por la carga anterior, limpiamos la cache
     clearCache();
 
+    start_cpu = clock();
     gettimeofday(&start, NULL);
 
     for(k=0; k<ITER; k++){
@@ -78,13 +80,16 @@ int main(int argc , char *argv[]) {
     } 
 
     gettimeofday(&end, NULL);
+    end_cpu = clock();
 
-    tiempo = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
+    double tiempoDesenrrollado = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
+    double tiempoDesenrrolladoCpu = ((double) (end_cpu - start_cpu)) / CLOCKS_PER_SEC;
 
-    printf("Bucle desenrrollado: %lf\n",tiempo);
-    fprintf(f, "%d %lf ", ITER, tiempo);
+    printf("Bucle desenrollado - Tiempo real: %lf, Tiempo CPU: %lf\n", tiempoDesenrrollado, tiempoDesenrrolladoCpu);
 
-    fprintf(f, "\n\n");
+    // Escribir los resultados en el archivo CSV
+    fprintf(f, "%d, %lf, %lf, %lf, %lf\n", N, tiempoSinDesenrollar, tiempoSinDesenrrollarCpu, tiempoDesenrrollado, tiempoDesenrrolladoCpu);
+    
     fclose(f);
 }
 

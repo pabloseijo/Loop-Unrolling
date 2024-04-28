@@ -1,9 +1,6 @@
 /**
  * @file unrolling.c
- * @brief The objective of this file is to compare the performance of a loop with and without loop unrolling.
- * @details The program receives two arguments, the size of the array and the number of iterations. The program 
- *          calculates the dot product of two arrays of size N, and measures the time it takes to perform the 
- *          operation with and without loop unrolling.
+ * @details this is a modified version of the unrolled.c file, where the loop rolled has been removed.
 */
 
 #include <stdio.h>
@@ -20,13 +17,6 @@ int main(int argc , char *argv[]) {
         exit(1);
     } 
 
-    FILE *f;
-
-    if((f = fopen("times.csv", "a"))== NULL){
-        printf("ERROR: file opening failed\n");
-        exit(1);
-    }
-
     // Es necesario introducir la limpieza de la caché (y asi eliminar residuos) para obtener resultados más precisos
     clearCache(); 
 
@@ -39,26 +29,6 @@ int main(int argc , char *argv[]) {
     int i, k;
     float x[N], y[N];
     float a = 0.0, a1 = 0.0, a2 = 0.0, a3 = 0.0;
-
-    //----- Fragmentos de codigo a medir -----//
-
-    gettimeofday(&start, NULL);
-
-    for(k=0; k<ITER; k++){
-        a=0.0;
-        for(i=0; i<N; i++){
-            a = a + x[i] * y[i];
-        }
-    }
-
-    gettimeofday(&end, NULL);
-
-    double tiempoSinDesenrollar = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
-
-    printf("Bucle normal - Tiempo real: %lf\n", tiempoSinDesenrollar);
-
-    //Para asegurarnos que las mediciones no esten afectadas por la carga anterior, limpiamos la cache
-    clearCache();
 
     gettimeofday(&start, NULL);
 
@@ -80,7 +50,6 @@ int main(int argc , char *argv[]) {
     double tiempoDesenrrollado = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
     printf("Bucle desenrollado - Tiempo real: %lf\n", tiempoDesenrrollado);
     
-    fclose(f);
 }
 
 void clearCache() {

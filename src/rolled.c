@@ -1,10 +1,9 @@
 /**
- * @file unrolling.c
- * @brief The objective of this file is to compare the performance of a loop with and without loop unrolling.
- * @details The program receives two arguments, the size of the array and the number of iterations. The program 
- *          calculates the dot product of two arrays of size N, and measures the time it takes to perform the 
- *          operation with and without loop unrolling.
+ * @file rolled.c
+ * @details this is a modified version of the unrolled.c file, where the loop unrolling has been removed.
 */
+
+//TODO: REVISAR LOS DATOS DE LOS CSV, ESTÁN MAL, ESTAN BIEN EN LOS TXT
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,13 +18,6 @@ int main(int argc , char *argv[]) {
         printf("ERROR: wrong number of arguments | Usage: %s <array size> <no. of iterations>\n", argv[0]);
         exit(1);
     } 
-
-    FILE *f;
-
-    if((f = fopen("times.csv", "a"))== NULL){
-        printf("ERROR: file opening failed\n");
-        exit(1);
-    }
 
     // Es necesario introducir la limpieza de la caché (y asi eliminar residuos) para obtener resultados más precisos
     clearCache(); 
@@ -55,32 +47,7 @@ int main(int argc , char *argv[]) {
 
     double tiempoSinDesenrollar = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
 
-    printf("Bucle normal - Tiempo real: %lf\n", tiempoSinDesenrollar);
-
-    //Para asegurarnos que las mediciones no esten afectadas por la carga anterior, limpiamos la cache
-    clearCache();
-
-    gettimeofday(&start, NULL);
-
-    for(k=0; k<ITER; k++){
-        a = a1 = a2 = a3 = 0.0;
-
-        for(i=0; i<N; i+=4){
-            a = a + x[i] * y[i];
-            a1 = a1 + x[i+1] * y[i+1];
-            a2 = a2 + x[i+2] * y[i+2];
-            a3 = a3 + x[i+3] * y[i+3];
-        }   
-
-        a = a + a1 + a2 + a3;
-    } 
-
-    gettimeofday(&end, NULL);
-
-    double tiempoDesenrrollado = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
-    printf("Bucle desenrollado - Tiempo real: %lf\n", tiempoDesenrrollado);
-    
-    fclose(f);
+    printf("Bucle normal - Tiempo real: %lf, tamaño: %d\n", tiempoSinDesenrollar, N);
 }
 
 void clearCache() {

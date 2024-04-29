@@ -80,7 +80,7 @@
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
 		\noindent En este informe, se abordará el tema del desenrolle de lazos para la optimización de operaciones de reducción, tal que se verá en que consiste la técnica y se comentarán experimentos.  \\\mbox{}\\
-		 \textbf{\textit{Palabras clave}: bucles, lazos, desenrollamiento, optimización\ldots}
+		 \textbf{\textit{Palabras clave}: bucles, lazos, unrolling, desenrollamiento, optimización\ldots}
 	\end{abstract}
 }
 
@@ -294,26 +294,6 @@ A partir del histograma, se pueden extraer varias conclusiones:
 
 Es importante considerar que el desenrollamiento de bucles puede introducir complejidad adicional en el código y podría aumentar el tamaño del binario final. Por lo tanto, la decisión de aplicar esta técnica debe balancear la mejora de rendimiento contra estos posibles inconvenientes.
 
-\subsection{Tiempo Real vs Tiempo de CPU}
-
-En este cuarto experimento, comparamos el tiempo de CPU con el tiempo real para ambas técnicas de ejecución del bucle, con el fin de observar diferencias entre estos y determinar si el desenrollamiento de lazos afecta de manera distinta a estos dos tipos de medición de tiempo.
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=\columnwidth]{img/times.png}
-    \caption{Comparación del tiempo real versus el tiempo de CPU para bucles normal y desenrollado.}
-    \label{fig:real_vs_cpu_time}
-\end{figure}
-
-A partir de la gráfica obtenemos varias conclusiones:
-
-\begin{itemize}
-    \item Se observa que el tiempo de CPU y el tiempo real para el bucle normal son muy similares a lo largo de todas las iteraciones, lo que indica una correlación directa entre ellos y sugiere una eficiencia constante en la ejecución.
-    \item Para el bucle desenrollado, tanto el tiempo real como el de CPU son consistentemente menores en comparación con el bucle normal, reafirmando la efectividad del desenrollamiento en la reducción del tiempo total de ejecución.
-\end{itemize}
-
-Podemos concluir que dado que ambos tiempos para cada técnica son muy similares, las evaluaciones realizadas en este experimento acaban de confirmar lo concretado en los experimentos anteriores sobre la eficacia del desenrollamiento de bucles en la reducción del tiempo de ejecución.
-
 \subsection{Dispersión de Eficiencia de Caché}
 
 Como útlimo experimento vamos a estudiar la eficiencia de caché de ambas técnicas. Para ello, vamos a calcular los "misses" de caché para cada técnica, y veremos como eso afecta al tiempo de ejecución.
@@ -323,7 +303,7 @@ En términos de arquitectura de computadoras, los "misses" de caché, también c
 Para el estudio de lo anterior, utilizaremos la herremienta valgrind, con el siguiente comando:
 
 \begin{lstlisting}[caption={Comando para ejecutar valgrind},label={lst:codigoC}]
-    valgrind --tool=cachegrind ./unrolling <array size> <no. of iterations>
+    valgrind --tool=cachegrind ./unrolling <array size> <no. of iterations> -O0
 \end{lstlisting}
 
 Para el estudio de los resultados, separamos las técnicas en dos códigos diferentes, para poder hacer uso del valgrind de manera correcta. Fijamos el numero de iteraciones en 5000 y aumentamos el tamaño del vector, empezando por 500 y acabando en 100000, dando saltos de 5000 en 5000. 
@@ -353,15 +333,20 @@ Una vez ejecutamos el código, obtenemos los siguientes resultados:
 
     \begin{figure}[H]
         \centering
-        \includegraphics[width=\columnwidth]{img/cacheRatioAux.png}
-        \caption{Comparación de ratio de misses de caché para bucles normal y desenrollado.}
+        \includegraphics[width=\columnwidth]{img/Fallos_LL.png}
+        \label{fig:real_vs_cpu_time}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\columnwidth]{img/Fallos_D1.png}
         \label{fig:real_vs_cpu_time}
     \end{figure}
 
     \begin{figure}[H]
         \centering
         \includegraphics[width=\columnwidth]{img/cacheRatioI1.png}
-        \caption{Comparación de ratio de misses de caché para bucles normal y desenrollado (2).}
+        \caption{Comparación de ratio de misses de caché para bucles normal y desenrollado.}
         \label{fig:real_vs_cpu_time}
     \end{figure}
 
@@ -374,12 +359,21 @@ Una vez ejecutamos el código, obtenemos los siguientes resultados:
 
 Con los resultados anteriores podemos concluir que en términos de eficiencia caché, a pesar de que el bucle desenrollado tiene menos fallos totales, el ratio de fallos por accesos es mayor, por lo que habría que considerarlo a la hora de aplicar la técnica.
 
+\section{Análisis del código ensamblador}
+
+Para finalizar, estudiamos el código ensamblador generado con la herramienta \href{https://godbolt.org/}{Godbolt}, para ver poder comparar el código generado por ambas técnicas.
+
+Como podemos comprobar al meter el código en la herramienta el código generado por el bucle desenrollado es mucho más largo que el generado por el bucle normal, lo que puede llevar a pensar que el desenrollamiento de lazos puede ser beneficioso en términos de tiempo de ejecución, pero perjudicial en términos de tamaño del binario final. 
+
+Por tanto, al ser el código generado más largo, la eficiencia espacial del código se ve reducida al introducir el desenrollamiento de bucles, lo que puede ser un factor a tener en cuenta a la hora de aplicar la técnica.
 
 %------------------------------------------------
 	
 \section{Conclusiones}
 
+Podemos concluir que una vez realizados los experimentos, el desenrollamiento de lazos es una técnica efectiva para la optimización de bucles en términos de tiempo de ejecución, pero tenemos que tener en cuenta que aumenta el tamaño del binario final y puede reducir la eficiencia espacial. 
 
+A pesar de todo esto, el "unrolling" resulta en la mayoría de casos una herramienta efectiva, y puede ayudar a reducir el tiempo de ejecución de los programas en bucles con un gran número de datos.
 
 %----------------------------------------------------------------------------------------
 %	Referencias

@@ -312,9 +312,67 @@ A partir de la gráfica obtenemos varias conclusiones:
     \item Para el bucle desenrollado, tanto el tiempo real como el de CPU son consistentemente menores en comparación con el bucle normal, reafirmando la efectividad del desenrollamiento en la reducción del tiempo total de ejecución.
 \end{itemize}
 
-Estas observaciones resaltan la importancia de considerar tanto el tiempo de CPU como el tiempo real al evaluar optimizaciones de código, ya que proporcionan una visión más completa del rendimiento y la eficiencia del programa, y podemos concluir que dado que ambos tiempos para cada técnica son muy similares, las las mejoras son similares a las obtenidas en los experimentos anteriores.
+Podemos concluir que dado que ambos tiempos para cada técnica son muy similares, las evaluaciones realizadas en este experimento acaban de confirmar lo concretado en los experimentos anteriores sobre la eficacia del desenrollamiento de bucles en la reducción del tiempo de ejecución.
 
+\subsection{Dispersión de Eficiencia de Caché}
 
+Como útlimo experimento vamos a estudiar la eficiencia de caché de ambas técnicas. Para ello, vamos a calcular los "misses" de caché para cada técnica, y veremos como eso afecta al tiempo de ejecución.
+
+En términos de arquitectura de computadoras, los "misses" de caché, también conocidos como fallos de caché, se producen cuando los datos requeridos por la CPU no están disponibles en la memoria caché. En consecuencia, se realiza una operación de acceso a la memoria principal para recuperar estos datos. Este proceso implica una latencia significativamente mayor comparada con la recuperación de datos directamente desde la caché, lo que resulta en un aumento en el tiempo de ejecución del programa.
+
+Para el estudio de lo anterior, utilizaremos la herremienta valgrind, con el siguiente comando:
+
+\begin{lstlisting}[caption={Comando para ejecutar valgrind},label={lst:codigoC}]
+    valgrind --tool=cachegrind ./unrolling <array size> <no. of iterations>
+\end{lstlisting}
+
+Para el estudio de los resultados, separamos las técnicas en dos códigos diferentes, para poder hacer uso del valgrind de manera correcta. Fijamos el numero de iteraciones en 5000 y aumentamos el tamaño del vector, empezando por 500 y acabando en 100000, dando saltos de 5000 en 5000. 
+
+Una vez ejecutamos el código, obtenemos los siguientes resultados:
+
+\begin{enumerate}
+    \item En primer lugar vamos a comparar los misses de caché totales para ambas técnicas:
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\columnwidth]{img/numberMisses.png}
+        \caption{Comparación de misses de caché totales para bucles normal y desenrollado.}
+        \label{fig:real_vs_cpu_time}
+    \end{figure}
+    
+    En la imagen podemos observar tres gráficas, que representan los misses de caché para la LL (Last Level), la I (Instrucciones) y la D (Datos). Es destacable que tanto en la LL como en la D1 (Datos de nivel 1) los fallos son similares para ambas ténicas, solo distando en ciertos puntos que puede deberse a una ejecución concreta del programa, es decir, podemos decir que en general para estas dos cachés el número de misses es similar.
+
+    Por otra parte cabe destacar el enorme crecimiento que se procuve en la gráfica de LL que coincide con el tamaño de array de 35 000. Esto puede deberse a que a partir de cierto tamaño entre 30 000 y 35 000, el array supera el tamaño de la caché, lo que provoca un gran aumento de fallos en la caché. 
+
+    En la caché D1, podemos ver que el crecimiento es cuasi-lineal, solo distando de una lineal en los primeros tamaños, que no producen tantos fallos. 
+
+    Por último, en la caché de instrucciones, podemos ver que hay un decrecimiento en el número de fallos, hasta que llega un determinado tamalo de array, donde se produce un salto creciente y despues se mantiene constante. Este saltop tambien coincide con el tamaño de array de 35 000, lo que nos lleva a pensar que a partir de este tamaño, el programa empieza a tener problemas con la caché de instrucciones, y que después a partir de 45 000 se mantiene constante, lo que puede deberse a que accede a todas las intrucciones únicas necesarias para el programa y las guarda en la caché.
+
+    Esta última es la única gráfica donde podemos ver que el bucle desenrollado tiene menos fallos que el bucle normal (lo que se debe a que accede a menos instrucciones), lo que nos lleva a pensar que el desenrollamiento de lazos puede ser beneficioso en este aspecto.
+
+    \item Por otra parte vamos a realizar las mismas gráficas pero ahora haciendo el ratio fallo por acceso, para ver como afecta el desenrollamiento de lazos a este ratio:
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\columnwidth]{img/cacheRatioAux.png}
+        \caption{Comparación de ratio de misses de caché para bucles normal y desenrollado.}
+        \label{fig:real_vs_cpu_time}
+    \end{figure}
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\columnwidth]{img/cacheRatioI1.png}
+        \caption{Comparación de ratio de misses de caché para bucles normal y desenrollado (2).}
+        \label{fig:real_vs_cpu_time}
+    \end{figure}
+
+    Para mejorar la visualización, ponemos la gráfica sin escalas logarítmicas, ya que al ser un ratio, no es necesario. 
+
+    Si nos fijamos tanto en las gráfica de la caché LL como la de la D1, podemos ver un resultado que se diferencia de las conclusiones del anterior punto. Esto es, a pesar de que en fallos totales es mejor el bucle desenrollado, al hacer el ratio podemos ver que el bucle normal tiene menos fallos por acceso que el desenrollado. Esto se puede deber a que al desenrollar el bucle se accede a más datos en memoria por iteración, lo que puede aumentar la presión sobre la caché de datos, provocando un aumento general en el número de fallos por acceso.
+
+    Por otra parte, podemos ver que a su vez el ratio para la caché de instrucciones es el mismo, y que es completamente decreciente por número de accesos.
+\end{enumerate}
+
+Con los resultados anteriores podemos concluir que en términos de eficiencia caché, a pesar de que el bucle desenrollado tiene menos fallos totales, el ratio de fallos por accesos es mayor, por lo que habría que considerarlo a la hora de aplicar la técnica.
 
 
 %------------------------------------------------

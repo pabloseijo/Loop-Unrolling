@@ -141,3 +141,8 @@ _site/
 *.seed.lock
 npm-debug.log
 yarn-error.log
+
+dockerfile
+*.txt
+src/python/
+src/env/

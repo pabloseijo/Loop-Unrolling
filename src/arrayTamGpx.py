@@ -2,7 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Reading data from file assuming the 'Iteraciones' column now represents the size of the array
-data = pd.read_csv('../arrayTam.txt', delim_whitespace=True, header=None, names=['TamañoArray', 'Tiempo'])
+data = pd.read_csv('../data/arrayTam.txt', delim_whitespace=True, header=None, names=['TamañoArray', 'Tiempo'])
 
 # Separating execution times for normal loop and unrolled loop
 # Assuming odd lines (0, 2, 4, ...) are for the normal loop and even lines (1, 3, 5, ...) are for the unrolled loop

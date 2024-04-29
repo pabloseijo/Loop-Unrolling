@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 
 # Define the data for rolled and unrolled loops including all types of misses
 # Leer los datos del archivo CSV para bucles enrollados
-df_rolled = pd.read_csv('../rolled.csv')
+df_rolled = pd.read_csv('../data/rolled.csv')
 
 # Leer los datos del archivo CSV para bucles desenrollados
-df_unrolled = pd.read_csv('../unrolled.csv')
+df_unrolled = pd.read_csv('../data/unrolled.csv')
 # Set up the plot figure and axes
 fig, ax = plt.subplots(3, 1, figsize=(12, 18), sharex=True)
 
@@ -30,7 +30,7 @@ ax[1].grid(True)
 ax[2].plot(df_rolled['ArrayTam'], df_rolled['I1 Misses'], 'd-', color='orange', label='Bucle Enrollado - Fallos I1')
 ax[2].plot(df_unrolled['ArrayTam'], df_unrolled['I1 Misses'], 'p-', color='brown', label='Bucle Desenrollado - Fallos I1')
 ax[2].set_title('Comparación de Fallos I1')
-ax[2].set_xlabel('Número de Iteraciones')
+ax[2].set_xlabel('Tamaño del Array')
 ax[2].set_ylabel('Fallos I1')
 ax[2].legend()
 ax[2].grid(True)

@@ -20,13 +20,6 @@ int main(int argc , char *argv[]) {
         exit(1);
     } 
 
-    FILE *f;
-
-    if((f = fopen("times.csv", "a"))== NULL){
-        printf("ERROR: file opening failed\n");
-        exit(1);
-    }
-
     // Es necesario introducir la limpieza de la caché (y asi eliminar residuos) para obtener resultados más precisos
     clearCache(); 
 
@@ -79,8 +72,6 @@ int main(int argc , char *argv[]) {
 
     double tiempoDesenrrollado = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
     printf("Bucle desenrollado - Tiempo real: %lf\n", tiempoDesenrrollado);
-    
-    fclose(f);
 }
 
 void clearCache() {

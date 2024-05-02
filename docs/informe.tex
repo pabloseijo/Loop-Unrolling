@@ -288,8 +288,8 @@ A partir del histograma, se pueden extraer varias conclusiones:
 
 \begin{itemize}
     \item La mejora de rendimiento tras aplicar el desenrollamiento de bucles es consistentemente positiva, lo que indica que esta técnica ofrece beneficios en todos los casos probados.
-    \item La mejora porcentual parece ser más significativa en tamaños de array más pequeños. Esto puede deberse a que el desenrollamiento reduce la sobrecarga del control del bucle, que es más notable cuando la carga de trabajo del bucle es menor.
-    \item A medida que el tamaño del array aumenta, la mejora porcentual se reduce. Sin embargo, incluso para los tamaños de array más grandes, la técnica aún proporciona un beneficio notable.
+    \item La mejora de rendimiento tiene un pico en torno al 80\%, y posteriormente se mantiene constante en valores en torno al 75\%. Esto sugiere que la técnica es especialmente efectiva en la reducción de tiempos de ejecución en cuando tenemos grandes cantidades de datos.
+    \item Hasta el tamaño de array mencionado anteriormente, la mejora de rendimiento aumenta, a partir de esa cantidad, se reduce ligeramente y se mantiene constante. 
 \end{itemize}
 
 Es importante considerar que el desenrollamiento de bucles puede introducir complejidad adicional en el código y podría aumentar el tamaño del binario final. Por lo tanto, la decisión de aplicar esta técnica debe balancear la mejora de rendimiento contra estos posibles inconvenientes.

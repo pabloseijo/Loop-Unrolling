@@ -15,10 +15,17 @@ void clearCache();
 
 int main(int argc , char *argv[]) {
     
-    if(argc < 2){
+    if(argc < 3){
         printf("ERROR: wrong number of arguments | Usage: %s <array size> <no. of iterations>\n", argv[0]);
         exit(1);
     } 
+
+    FILE *fp;   
+
+    if((fp = fopen("unrolling4.csv", "a")) == NULL){
+        printf("ERROR: opening the file failed\n");
+        exit(1);
+    }
 
     // Es necesario introducir la limpieza de la caché (y asi eliminar residuos) para obtener resultados más precisos
     clearCache(); 
@@ -48,43 +55,59 @@ int main(int argc , char *argv[]) {
 
     double tiempoSinDesenrollar = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
 
-    printf("Bucle normal - Tiempo real: %lf\n", tiempoSinDesenrollar);
+    printf("Tiempo sin desenrollar - Tiempo real: %lf\n", tiempoSinDesenrollar);
 
     //Para asegurarnos que las mediciones no esten afectadas por la carga anterior, limpiamos la cache
     clearCache();
 
     gettimeofday(&start, NULL);
 
-    for(k=0; k<ITER; k++){
+   for (k = 0; k < ITER; k++) {
         a = a1 = a2 = a3 = 0.0;
 
-        for(i=0; i<N; i+=4){
+        for (i = 0; i < N; i += 4) {
             a = a + x[i] * y[i];
             a1 = a1 + x[i+1] * y[i+1];
             a2 = a2 + x[i+2] * y[i+2];
             a3 = a3 + x[i+3] * y[i+3];
-        }   
+        }
 
         a = a + a1 + a2 + a3;
-    } 
+    }
+
 
     gettimeofday(&end, NULL);
 
-    double tiempoDesenrrollado = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
-    printf("Bucle desenrollado - Tiempo real: %lf\n", tiempoDesenrrollado);
+    double tiempoDesenrollado = (end.tv_sec-start.tv_sec+(end.tv_usec-start.tv_usec)/1.e6);
+    printf("Bucle desenrollado - Tiempo real: %lf\n", tiempoDesenrollado);
+
+    // Escribir los resultados en el archivo CSV
+    fprintf(fp, "%d, %lf, %lf\n", N, tiempoSinDesenrollar, tiempoDesenrollado);
+    fclose(fp);  // Cerrar el archivo
 }
 
+//Limpia las caches del ordenador
 void clearCache() {
-
-    // Tamaño de la caché L1 de datos (L1d) en bytes
-    int cacheSize = 64 * 1024;
-    int numInts = cacheSize / sizeof(int); 
-    int* dummy = malloc(numInts * sizeof(int));
-
-    // Escribir en la memoria para asegurar que se carga en la caché L1 de datos
-    for (int i = 0; i < numInts; i++) {
-        dummy[i] = i;
+    // Tamaños de las cachés en bytes
+    int l1d_cacheSize_perf0 = 131072; // L1d perflevel0
+    int l1d_cacheSize_perf1 = 65536;  // L1d perflevel1
+    int l2_cacheSize_perf0 = 16777216; // L2 perflevel0
+    int l2_cacheSize_perf1 = 4194304; // L2 perflevel1
+    
+    int cacheSizes[] = {l1d_cacheSize_perf0, l1d_cacheSize_perf1, l2_cacheSize_perf0, l2_cacheSize_perf1};
+    int numSizes = sizeof(cacheSizes) / sizeof(int);
+    int i, j;
+    
+    for (j = 0; j < numSizes; j++) {
+        int numInts = cacheSizes[j] / sizeof(int);
+        int* dummy = malloc(numInts * sizeof(int));
+        
+        // Escribir en la memoria para asegurar que se carga en la caché
+        for (i = 0; i < numInts; i++) {
+            dummy[i] = i;
+        }
+        
+        free(dummy);
     }
-
-    free(dummy);
 }
+

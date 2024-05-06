@@ -79,11 +79,10 @@
 \date{\today} % Leave empty to omit a date
 \renewcommand{\maketitlehookd}{%
 	\begin{abstract}
-		\noindent En este informe, se abordará el tema del desenrolle de lazos para la optimización de operaciones de reducción, tal que se verá en que consiste la técnica y se comentarán experimentos.  \\\mbox{}\\
+		\noindent En este informe se abordará el tema del desenrrolle de lazos y como afecta su produndidad en términos de tiempo de ejecución del programa.  \\\mbox{}\\
 		 \textbf{\textit{Palabras clave}: bucles, lazos, unrolling, desenrollamiento, optimización\ldots}
 	\end{abstract}
 }
-
 %----------------------------------------------------------------------------------------
 
 \begin{document}
@@ -97,7 +96,7 @@
 	
 	\section{Introducción}
 
-        En el presente informe se describe una serie de experimentos diseñados para estudiar la técnica denominada desenrollamiento de lazos, en el contexto de operaciones de reducción.
+        En el presente informe se describe una serie de experimentos diseñados para estudiar la técnica denominada desenrollamiento de lazos, en el contexto de operaciones de reducción, y su profundidad. Con su profundidad nos referimos a la cantidad de veces que se ejecuta el cuerpo del bucle en cada iteración.
         
         Para el estudio, se realizarán varios programas breves escritos en el lenguaje de bajo nivel C, ejecutados en un sistema operativo UNIX. Para la medición de los tiempos de ejecución de los bucles for se utilizará la librería \textit{sys/time.h}.
 
@@ -179,201 +178,69 @@ Como casi cualquier herramienta que podamos utilizar, esta técnica conlleva una
 
 Por tanto, viendo las ventajas y las desventajas, el programador deberá valorar si aplicar esta técnica en su código, ya que aunque puede mejorar el rendimiento, también puede conllevar una serie de problemas.
 
-\section{Experimentos}
+\subsection{Experimentos}
 
-Para los experimentos, se ha realizado un programa en C que mide los dos siguiente bucles:
+Para la realización de los experimentos hay que tener en cuenta un factor fundamental, y es referido al tamaño del array. Este debe ser divisible entre el número de desenrolles que queramos hacer, de tal manera que que no se produzca ningún error de acceder a posiciones que no existen.
 
-\begin{lstlisting}[caption={Bucle sin desenrollar},label={lst:codigoC}]
-	for(k=0; k<ITER; k++){
-        a=0.0;
-        for(i=0; i<N; i++){
-            a = a + x[i] * y[i];
-        }
-    }
-\end{lstlisting}
+Por tanto, y teniendo en cuenta lo anterior lo que hacemos es utilizar los múltiplos de 2 desde el 16 hasta el 8192, para que no haya problemas de acceso a memoria. A su vez ponemos un número de iteraciones suficientemente alto para que se pueda apreciar la diferencia entre los bucles desenrollados y los que no lo están. En este caso, hemos puesto 2 000 000 iteraciones.
 
-\begin{lstlisting}[caption={Bucle aplicando la técnica},label={lst:codigoC}]
-	for(k=0; k<ITER; k++){
-        a = a1 = a2 = a3 = 0.0;
+También es destacable que utilizamos factores de desenrollamiento que sean potencias de 2 para que se alineen mejor con los tamaños de los resigtros y la arquitecutra del hardware.
 
-        for(i=0; i<N; i+=4){
-            a = a + x[i] * y[i];
-            a1 = a1 + x[i+1] * y[i+1];
-            a2 = a2 + x[i+2] * y[i+2];
-            a3 = a3 + x[i+3] * y[i+3];
-        }   
+\subsubsection{Desenrolle de tamaño 4}
 
-        a = a + a1 + a2 + a3;
-    } 
-\end{lstlisting}
+Para empezar con los experimentos, haremos un desenrolle de tamaño, es decir, que en cada iteración del bucle se realizarán 4 operaciones. Para esto, mediremos el tiempo de ejecución de un bucle normal y de uno desenrollado y los compararemos.
 
-En el primer bucle [3], se realiza la operación de producto escalar de dos vectores de tamaño N, y se repite ITER veces. En el segundo bucle [4], se ha desenrollado el bucle interno, realizando 4 operaciones en cada iteración.
-
-Por tanto sobre estos dos lazos realizarán experimentos modificando el valor de N y de ITER, para ver como afecta el desenrollamiento de lazos en el tiempo de ejecución del programa.
-
-Un detalle a destacar sobre la implementación del código, es la necesidad de limpiar la caché antes de realizar las mediciones, ya que si no se hace, puede afectar a la precisión de los datos medidos. Para ello, se ha implementado la función \textit{clearCache()} la cual, sirviéndose del tamaño de la caché L1d, crea un array de este tamaño para posteriormente rellenarlo entero y posteriormente liberándolo. Debido al tamaño del programa no es necesario limpiar la caché L2, ya que el tamaño de la anterior es de 64KB, y no llega a sobrepasar este tamaño.
-
-\subsection{Tiempos de ejecución}
-
-Para el primer experimento vamos a realizar una serie de mediciones variando el tamaño de ITER, con un tamaño de array fijo, y veremos como afecta al tiempo de ejecución del programa.
-
-Para analizarlo correctamente nos serviremos de la siguiente gráfica:
+De los resultados temporales obtenemos la siguiente gráfica:
 
 \begin{figure}[H]
-    \centering
-    \hspace{1cm}
-    \includegraphics[width=\columnwidth]{img/exeTimes.jpg}
-    \caption{Gráfica de tiempo de ejecución en función de ITER}
-    \label{fig:iter}
+	\centering
+	\includegraphics[width=\columnwidth]{4.png}
+	\caption{Tiempos de ejecución para un bucle desenrollado de tamaño 4}
+	\label{fig:times}
 \end{figure}
 
-La gráfica nos muestra dos curvas, azul para el bucle normal y naranja para el bucle desenrollado. Como se puede fácilmente observar obtenemo slas siguientes conclusiones:
-
-\begin{itemize}
-    \item \textbf{Mejora del rendimiento con el desenrollamiento:} El bucle desenrollado muestra consistentemente tiempos de ejecución inferiores en comparación con el bucle normal a lo largo de todo el rango de iteraciones. Esto indica que el desenrollamiento de bucles puede ser una técnica efectiva para optimizar el rendimiento de los programas en términos de tiempo de ejecución.
-    \item \textbf{Escalabilidad:} A medida que aumenta el número de iteraciones, el impacto del desenrollamiento de bucles en la mejora del rendimiento parece ser más pronunciado. La curva del bucle normal muestra un crecimiento más rápido que la del bucle desenrollado, lo que sugiere que la técnica de desenrollamiento se vuelve más ventajosa a gran escala.
-    \item \textbf{Crecimiento lineal:} Ambas curvas parecen seguir un patrón de crecimiento lineal, lo cual es esperable ya que el tiempo de ejecución debería aumentar proporcionalmente con el número de iteraciones. No obstante, la pendiente de la curva del bucle desenrollado es claramente menos inclinada, lo que sugiere una menor adición de tiempo por cada iteración adicional en comparación con el bucle normal.
-\end{itemize}
-
-Sin embargo, y a pesar de las mejoras descritas, hay que tener en cuenta que con números bajos de iteraciones, ambos bucles no distan tanto en tiempo de ejecución, por lo que habría que estudiar si en estos casos sería beneficioso aplicar la técnica.
-
-\subsection{Por tamaño de array}
-
-En este segundo experimento a realizar, haremos lo contrario al anterior, es decir, mantendremos un tamaño fijo de iteraciones (5000) y variaremos el tamaño del array.
-
-Esto nos permitirá ver como el unrolling afecta a diferentes tamaños de datos, y si verdaderamente es eficaz, frente a un bucle normal sin desenrollar.
-
-Como en el anteriro experimento nos serviremos de la siguiente gráfica, donde el eje X es el tamaño del array (N) y el eje Y el tiempo de ejecución:
-
+Como podemos comprobar en la gráfica, el desenrolle de lazos mejora el tiempo de ejecución del programa, y a medida que incremental el tamaño del array, la diferencia entre ambos bucles se hace más notable, como comprobamos en la siguiente gráfica donde medimos el porcentaje de memoria:
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=\columnwidth]{img/arrayTam.png}
-    \caption{Gráfica de tiempo de ejecución en función de N}
-    \label{fig:iter}
+	\centering
+	\includegraphics[width=\columnwidth]{4Histograma.png}
+	\caption{Porcentaje de mejora del bucle desenrollado respecto al enrollado}
+	\label{fig:times}
 \end{figure}
 
-Al igual que en el experimento anterior, podemos sacar unas conclusiones similares:
+Por tanto podemos concluir que en térmimos de eficiencia temporal, el desenrolle de lazos mejora la eficiencia temporal del programa, y que a mayor el tamaño del array, mayor será la diferencia entre ambos bucles.
 
-\begin{itemize}
-    \item El tiempo de ejecución para el bucle normal aumenta linealmente con el tamaño del array, lo que indica una relación directa entre el tamaño del array y el tiempo de cómputo requerido.
-    \item El bucle desenrollado demuestra una eficiencia notablemente mayor. Aunque el tiempo de ejecución también crece con el tamaño del array, lo hace a una tasa menor que el bucle normal.
-    \item La diferencia de tiempo entre los dos enfoques se amplía con el aumento del tamaño del array. Esto sugiere que para arrays grandes, el desenrollamiento de bucles puede ser especialmente beneficioso.
-    \item La técnica de desenrollamiento de bucles se confirma como una optimización efectiva para la reducción de la sobrecarga de los bucles y el aprovechamiento del paralelismo del hardware, lo cual es crítico en aplicaciones de procesamiento de datos de gran volumen.
-\end{itemize}
+\subsubsection{Comparación de los desenrolles}
 
-Estos resultados son muy similares a los obtenidos en el experimento anterior, lo que nos lleva a pensar que la técnica de desenrollamiento de lazos es efectiva en la reducción de tiempos de ejecución en bucles de gran tamaño.
+Puesto que en los dos experimentos anteriores sacamos las mismas conclusiones (es decir, que el desenrolle mejora la eficiencia temporal), vamos a comparar los desenrolles entre sí, así como añadir para d = 8 y 16.
 
-\subsection{Mejora de Rendimiento}
-
-En este apartado vamos a calcular el porcentaje de mejora de rendimiento de una técnica respecto a la otra aplicando la siguiente fórmula:
-
-\begin{equation}
-    \text{Mejora de Rendimiento (\%)} = \left( \frac{ts - td}{ts} \right) \times 100\%
-\end{equation}
-
-Donde \( ts \) representa el tiempo sin desenrollar y \( td \) el tiempo con desenrollado. 
-
-Para representar esto nos serviremos del siguiente historiograma:   
+La gráfica es la siguiente: 
 
 \begin{figure}[H]
-    \centering
-    \includegraphics[width=\columnwidth]{img/improvement.png}
-    \caption{Histograma de la mejora de rendimiento al aplicar la técnica de desenrollamiento de bucles.}
-    \label{fig:histograma_mejora_rendimiento}
+	\centering
+	\includegraphics[width=\columnwidth]{4.png}
+	\caption{Tiempos de ejecución para un bucle desenrollado de tamaño 4}
+	\label{fig:times}
 \end{figure}
 
 
-A partir del histograma, se pueden extraer varias conclusiones:
+\section{Resultados}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{execution_times.png}
+    \caption{Tiempos de ejecución para diferentes valores de `d`}
+    \label{fig:times}
+\end{figure}
 
+\section{Discusión}
 \begin{itemize}
-    \item La mejora de rendimiento tras aplicar el desenrollamiento de bucles es consistentemente positiva, lo que indica que esta técnica ofrece beneficios en todos los casos probados.
-    \item La mejora de rendimiento tiene un pico en torno al 80\%, y posteriormente se mantiene constante en valores en torno al 75\%. Esto sugiere que la técnica es especialmente efectiva en la reducción de tiempos de ejecución en cuando tenemos grandes cantidades de datos.
-    \item Hasta el tamaño de array mencionado anteriormente, la mejora de rendimiento aumenta, a partir de esa cantidad, se reduce ligeramente y se mantiene constante. 
+    \item ¿Qué valor de `d` proporciona el mejor rendimiento?
+    \item ¿Hay un punto en el que el rendimiento empeora?
+    \item ¿Cuáles podrían ser las causas?
 \end{itemize}
 
-Es importante considerar que el desenrollamiento de bucles puede introducir complejidad adicional en el código y podría aumentar el tamaño del binario final. Por lo tanto, la decisión de aplicar esta técnica debe balancear la mejora de rendimiento contra estos posibles inconvenientes.
-
-\subsection{Dispersión de Eficiencia de Caché}
-
-Como útlimo experimento vamos a estudiar la eficiencia de caché de ambas técnicas. Para ello, vamos a calcular los "misses" de caché para cada técnica, y veremos como eso afecta al tiempo de ejecución.
-
-En términos de arquitectura de computadoras, los "misses" de caché, también conocidos como fallos de caché, se producen cuando los datos requeridos por la CPU no están disponibles en la memoria caché. En consecuencia, se realiza una operación de acceso a la memoria principal para recuperar estos datos. Este proceso implica una latencia significativamente mayor comparada con la recuperación de datos directamente desde la caché, lo que resulta en un aumento en el tiempo de ejecución del programa.
-
-Para el estudio de lo anterior, utilizaremos la herremienta valgrind, con el siguiente comando:
-
-\begin{lstlisting}[caption={Comando para ejecutar valgrind},label={lst:codigoC}]
-    valgrind --tool=cachegrind ./unrolling <array size> <no. of iterations> -O0
-\end{lstlisting}
-
-Para el estudio de los resultados, separamos las técnicas en dos códigos diferentes, para poder hacer uso del valgrind de manera correcta. Fijamos el numero de iteraciones en 5000 y aumentamos el tamaño del vector, empezando por 500 y acabando en 100000, dando saltos de 5000 en 5000. 
-
-Una vez ejecutamos el código, obtenemos los siguientes resultados:
-
-\begin{enumerate}
-    \item En primer lugar vamos a comparar los misses de caché totales para ambas técnicas:
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=\columnwidth]{img/numberMisses.png}
-        \caption{Comparación de misses de caché totales para bucles normal y desenrollado.}
-        \label{fig:real_vs_cpu_time}
-    \end{figure}
-    
-    En la imagen podemos observar tres gráficas, que representan los misses de caché para la LL (Last Level), la I (Instrucciones) y la D (Datos). Es destacable que tanto en la LL como en la D1 (Datos de nivel 1) los fallos son similares para ambas ténicas, solo distando en ciertos puntos que puede deberse a una ejecución concreta del programa, es decir, podemos decir que en general para estas dos cachés el número de misses es similar.
-
-    Por otra parte cabe destacar el enorme crecimiento que se procuve en la gráfica de LL que coincide con el tamaño de array de 35 000. Esto puede deberse a que a partir de cierto tamaño entre 30 000 y 35 000, el array supera el tamaño de la caché, lo que provoca un gran aumento de fallos en la caché. 
-
-    En la caché D1, podemos ver que el crecimiento es cuasi-lineal, solo distando de una lineal en los primeros tamaños, que no producen tantos fallos. 
-
-    Por último, en la caché de instrucciones, podemos ver que hay un decrecimiento en el número de fallos, hasta que llega un determinado tamalo de array, donde se produce un salto creciente y despues se mantiene constante. Este saltop tambien coincide con el tamaño de array de 35 000, lo que nos lleva a pensar que a partir de este tamaño, el programa empieza a tener problemas con la caché de instrucciones, y que después a partir de 45 000 se mantiene constante, lo que puede deberse a que accede a todas las intrucciones únicas necesarias para el programa y las guarda en la caché.
-
-    Esta última es la única gráfica donde podemos ver que el bucle desenrollado tiene menos fallos que el bucle normal (lo que se debe a que accede a menos instrucciones), lo que nos lleva a pensar que el desenrollamiento de lazos puede ser beneficioso en este aspecto.
-
-    \item Por otra parte vamos a realizar las mismas gráficas pero ahora haciendo el ratio fallo por acceso, para ver como afecta el desenrollamiento de lazos a este ratio:
-
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=\columnwidth]{img/Fallos_LL.png}
-        \label{fig:real_vs_cpu_time}
-    \end{figure}
-
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=\columnwidth]{img/Fallos_D1.png}
-        \label{fig:real_vs_cpu_time}
-    \end{figure}
-
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=\columnwidth]{img/cacheRatioI1.png}
-        \caption{Comparación de ratio de misses de caché para bucles normal y desenrollado.}
-        \label{fig:real_vs_cpu_time}
-    \end{figure}
-
-    Para mejorar la visualización, ponemos la gráfica sin escalas logarítmicas, ya que al ser un ratio, no es necesario. 
-
-    Si nos fijamos tanto en las gráfica de la caché LL como la de la D1, podemos ver un resultado que se diferencia de las conclusiones del anterior punto. Esto es, a pesar de que en fallos totales es mejor el bucle desenrollado, al hacer el ratio podemos ver que el bucle normal tiene menos fallos por acceso que el desenrollado. Esto se puede deber a que al desenrollar el bucle se accede a más datos en memoria por iteración, lo que puede aumentar la presión sobre la caché de datos, provocando un aumento general en el número de fallos por acceso.
-
-    Por otra parte, podemos ver que a su vez el ratio para la caché de instrucciones es el mismo, y que es completamente decreciente por número de accesos.
-\end{enumerate}
-
-Con los resultados anteriores podemos concluir que en términos de eficiencia caché, a pesar de que el bucle desenrollado tiene menos fallos totales, el ratio de fallos por accesos es mayor, por lo que habría que considerarlo a la hora de aplicar la técnica.
-
-\section{Análisis del código ensamblador}
-
-Para finalizar, estudiamos el código ensamblador generado con la herramienta \href{https://godbolt.org/}{Godbolt}, para ver poder comparar el código generado por ambas técnicas.
-
-Como podemos comprobar al meter el código en la herramienta el código generado por el bucle desenrollado es mucho más largo que el generado por el bucle normal, lo que puede llevar a pensar que el desenrollamiento de lazos puede ser beneficioso en términos de tiempo de ejecución, pero perjudicial en términos de tamaño del binario final. 
-
-Por tanto, al ser el código generado más largo, la eficiencia espacial del código se ve reducida al introducir el desenrollamiento de bucles, lo que puede ser un factor a tener en cuenta a la hora de aplicar la técnica.
-
-%------------------------------------------------
-	
 \section{Conclusiones}
-
-Podemos concluir que una vez realizados los experimentos, el desenrollamiento de lazos es una técnica efectiva para la optimización de bucles en términos de tiempo de ejecución, pero tenemos que tener en cuenta que aumenta el tamaño del binario final y puede reducir la eficiencia espacial. 
-
-A pesar de todo esto, el "unrolling" resulta en la mayoría de casos una herramienta efectiva, y puede ayudar a reducir el tiempo de ejecución de los programas en bucles con un gran número de datos.
+En este informe, se estudió el desenrolle de lazos con diferentes profundidades y se analizaron los efectos en el tiempo de ejecución. Los resultados mostraron que \ldots
 
 %----------------------------------------------------------------------------------------
 %	Referencias
@@ -405,4 +272,3 @@ A pesar de todo esto, el "unrolling" resulta en la mayoría de casos una herrami
 	%----------------------------------------------------------------------------------------
 	
 \end{document}
-

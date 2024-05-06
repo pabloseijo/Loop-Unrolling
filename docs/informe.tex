@@ -188,14 +188,14 @@ También es destacable que utilizamos factores de desenrollamiento que sean pote
 
 \subsubsection{Desenrolle de tamaño 4}
 
-Para empezar con los experimentos, haremos un desenrolle de tamaño, es decir, que en cada iteración del bucle se realizarán 4 operaciones. Para esto, mediremos el tiempo de ejecución de un bucle normal y de uno desenrollado y los compararemos.
+Para empezar con los experimentos, haremos un desenrolle de factor 4, es decir, que en cada iteración del bucle se realizarán 4 operaciones. Para esto, mediremos el tiempo de ejecución de un bucle normal y de uno desenrollado y los compararemos.
 
 De los resultados temporales obtenemos la siguiente gráfica:
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\columnwidth]{4.png}
-	\caption{Tiempos de ejecución para un bucle desenrollado de tamaño 4}
+	\includegraphics[width=\columnwidth]{img/4.png}
+	\caption{Tiempos de ejecución para un bucle desenrollado de factor 4}
 	\label{fig:times}
 \end{figure}
 
@@ -203,44 +203,92 @@ Como podemos comprobar en la gráfica, el desenrolle de lazos mejora el tiempo d
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\columnwidth]{4Histograma.png}
+	\includegraphics[width=\columnwidth]{img/4Histograma.png}
 	\caption{Porcentaje de mejora del bucle desenrollado respecto al enrollado}
 	\label{fig:times}
 \end{figure}
 
 Por tanto podemos concluir que en térmimos de eficiencia temporal, el desenrolle de lazos mejora la eficiencia temporal del programa, y que a mayor el tamaño del array, mayor será la diferencia entre ambos bucles.
 
+Es importante destacar que esta conclusion se repetiría para cualquier factor de desenrolle, ya que la mejora en el tiempo de ejecución es notable en todos los casos.
+
 \subsubsection{Comparación de los desenrolles}
 
-Puesto que en los dos experimentos anteriores sacamos las mismas conclusiones (es decir, que el desenrolle mejora la eficiencia temporal), vamos a comparar los desenrolles entre sí, así como añadir para d = 8 y 16.
-
-La gráfica es la siguiente: 
+Una vez comparado el bucle desenrollado de tamaño 4 con el enrollado, vamos a comparar los tiempos de ejecución de los bucles desenrollados de tamaño 2, 4, 8 y 16. Aquí veremos hasta que punto es rentable hacer grandes desenrolles, y si hay un punto en el que el rendimiento empeora, o que simplemente el porcentaje de mejora respecto al anterior no es significativo:
 
 \begin{figure}[H]
 	\centering
-	\includegraphics[width=\columnwidth]{4.png}
-	\caption{Tiempos de ejecución para un bucle desenrollado de tamaño 4}
+	\includegraphics[width=\columnwidth]{img/comp.png}
+	\caption{Tiempos de ejecución para los diferentes factores de desenrolle}
 	\label{fig:times}
 \end{figure}
 
+Como vemos en la gráfica, a medida que incrementamos el factor de desenrolle, el tiempo de ejecución del programa disminuye, pero a partir del factor 8, la mejora en el tiempo de ejecución es menos significativa, y con 16 podemos apreciar una diferencia ligeramente mayor a la que tiene 8 respecto a 4. 
 
-\section{Resultados}
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.5\textwidth]{execution_times.png}
-    \caption{Tiempos de ejecución para diferentes valores de `d`}
-    \label{fig:times}
+Siendo esta la vista del tiempo total, miremos la gráfica de porcentaje de mejoras:
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\columnwidth]{img/porcentajeMejora.png}
+	\caption{Porcentaje de mejora respecto al bucle sin desenrollar}
+	\label{fig:times}
 \end{figure}
 
-\section{Discusión}
-\begin{itemize}
-    \item ¿Qué valor de `d` proporciona el mejor rendimiento?
-    \item ¿Hay un punto en el que el rendimiento empeora?
-    \item ¿Cuáles podrían ser las causas?
-\end{itemize}
+Al poner la escala logarítmica en el eje de las x, podemos apreciar mejor las diferencias entre los diferentes factores. Podemos apreciar que para valores pequeños el factor 4 y 8 son similares, e incluso podemos apreciar que para valores realmente pequeños, el factor de 16 es peor incluso que 2.
+
+A medida que vamos aumentando el tamaño del array, el factor 16 va subiendo su porcentaje de mejora, hasta llegar a ser el mejor factor de desenrolle para arrays grandes. Tambien el factor 8 se desmarca ligeramente del factor 4, siendo el segundo mejor factor de desenrolle.
+
+Una constante, es que menos para los valores muy pequeños, donde el factor 16 es peor que el 2, el propio 2 se mantiene muy distanciado del resto, estando hasta 30 puntos porcentuales por debajo del factor 4.
+
+Sin embargo, y a pesar de lo anterior, hay que destacar que la razón por la que el factor 16 es peor en pequeñas cantidades es porque, al ser el tamaño del array 16, el bucle desenrollado solo se ejecuta una vez, por lo que empeora la mejora del tiempo de ejecución. Es decir, si el factor de desenrollado es igual o mayor al tamaño del array, entonces el desenrollado del bucle no tiene el mismo impacto positivo que cuando el factor de desenrollado es menor.
+
+Por eso, a menudo se recomienda ajustar el factor de desenrollado para que sea significativamente menor que el tamaño del array, permitiendo múltiples iteraciones del bucle desenrollado y optimizando el rendimiento.
+
+\section{Código Ensamblador}
+
+En esta sección se analizarán los códigos ensamblador generados para los distintos factores de desenrollamiento, comparando su tamaño y las implicaciones de estos tamaños en el rendimiento y en otros aspectos del programa.
+
+\subsection{Código con Factor de Desenrollamiento 2}
+
+El código ensamblador para el factor de desenrollamiento 2 tiene un tamaño total de 1279 líneas. Es el código más compacto de los cuatro debido a que realiza el menor número de operaciones en cada iteración del bucle desenrollado.
+
+\subsection{Código con Factor de Desenrollamiento 4}
+
+El código ensamblador para el factor de desenrollamiento 4 tiene un tamaño total de 1310 líneas. Esto es un incremento respecto al tamaño del código con desenrollamiento de factor 2, lo cual es esperable, ya que el bucle desenrollado procesa más elementos en cada iteración.
+
+\subsection{Código con Factor de Desenrollamiento 8}
+
+El código ensamblador para el factor de desenrollamiento 8 tiene un tamaño total de 1344 líneas. Al igual que en el caso anterior, el aumento en el factor de desenrollamiento implica más operaciones en cada iteración y, por lo tanto, un código más grande.
+
+\subsection{Código con Factor de Desenrollamiento 16}
+
+El código ensamblador para el factor de desenrollamiento 16 tiene un tamaño total de 1388 líneas, siendo el más extenso de los cuatro. Esto se debe a que procesa 16 elementos en cada iteración, lo que requiere un código más largo.
+
+\subsection{Análisis del Tamaño del Código}
+
+En general, el tamaño del código aumenta con el factor de desenrollamiento, ya que un mayor factor implica más operaciones en cada iteración del bucle. Este aumento en el tamaño del código puede tener varias implicaciones:
+
+\begin{enumerate}
+	\item Uso de Memoria: Un código más grande ocupa más memoria, lo que puede ser problemático en sistemas con recursos limitados o cuando se busca optimizar el uso de la memoria.
+
+	\item Caché de Instrucciones: Un código más grande puede impactar negativamente el rendimiento al ocupar más espacio en la cache de instrucciones, especialmente si el código no cabe completamente en la cache.
+\end{enumerate}
+
+Por tanto es importante estudiar el tamaño del código generado, y ponerlo en relación con el porcentaje de memoria para escoger correctamente el factor de desenrollamiento.
 
 \section{Conclusiones}
-En este informe, se estudió el desenrolle de lazos con diferentes profundidades y se analizaron los efectos en el tiempo de ejecución. Los resultados mostraron que \ldots
+
+En este informe, se exploró el impacto del desenrollamiento de lazos en operaciones de reducción, enfocándose en cómo la profundidad del desenrollamiento afecta el tiempo de ejecución del programa. A través de una serie de experimentos con factores de desenrollamiento de 2, 4, 8 y 16, se observaron mejoras en el tiempo de ejecución en comparación con un bucle sin desenrollar.
+
+Los resultados mostraron que el desenrollamiento de lazos generalmente mejora el tiempo de ejecución, y que los factores más altos de desenrollamiento proporcionan mejores mejoras, aunque con rendimientos que se acaban por estabilizar (en torno al 75-80\%).
+
+Para tamaños de array pequeños, como 16 y 32, el factor 16 resultó ser menos eficiente, ya que el desenrollamiento resultó en una única (o dos) iteración, eliminando la mejora esperada. Esto indica que es importante ajustar el factor de desenrollamiento a un valor significativamente menor que el tamaño del array para obtener mejoras óptimas.
+
+Por lo tanto, el desenrollamiento de lazos es una técnica valiosa para optimizar el rendimiento, pero debe usarse con cuidado y ajustarse según el tamaño del array y la arquitectura del sistema. La elección del factor de desenrollamiento adecuado puede depender del tamaño del array y las limitaciones del hardware, pero generalmente, factores como 4 u 8 son buenos puntos de partida.
+
+Un punto importante, es que se debe tener en cuenta el aumento de complejidad que acarrea el desenrollamiento de lazos, lo que puede dificultar el mantenimiento del código, así como también el aumento del tamaño del código como vimos en la sección anterior.
+
+En resumen, el desenrollamiento de lazos es una técnica poderosa para mejorar el rendimiento de los programas, pero debe usarse con precaución y ajustarse cuidadosamente para obtener los mejores resultados.
 
 %----------------------------------------------------------------------------------------
 %	Referencias

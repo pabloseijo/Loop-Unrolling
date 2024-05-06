@@ -7,7 +7,7 @@ ITERATIONS=2000000
 EXECUTABLE="./exe"
 
 # Archivo de resultados
-OUTPUT_FILE="unrolling2.csv"
+OUTPUT_FILE="unrolling16.csv"
 
 # Escribir encabezado en el archivo de resultados
 echo "N, tiempoSinDesenrollar, tiempoDesenrollado" > $OUTPUT_FILE
